@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Renta Barrios Bcn</title>
+    <meta name="description" content="">
+    <meta name="author" content="S G">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.css" />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.ie.css" />
+    <![endif]-->
+    <link rel="stylesheet" href="css/light-theme.css">
+    <link rel="stylesheet" href="css/renta_bcn.css">
+    <link rel="stylesheet" href="css/makeitresponsive.css">
+    
+    <script src="http://libs.cartocdn.com/cartodb.js/v2/cartodb.js"></script>
+
+  
+  </head>
+  <body onload="init()">
+  <div class="contenedor">
+    <div class="map" id="map"></div>
+
+    <!-- menu query a capa barrios-->
+    <div id="layer_selector" class="cartodb_infobox">
+      <ul>
+        <li data="all" class="rfd all selected">all</li>
+        <li data="50" class="rfd"> index rfd < 50</li>
+        <li data="75" class="rfd">index rfd < 75</li>
+        <li data="99" class="rfd">index rfd < 100</li>
+        <li data="100" class="rfd">index rfd > 100</li>
+        <li data="150" class="rfd">index rfd > 150</li>
+        <li data="200" class="rfd">index rfd > 200</li>
+      </ul>
+    </div>
+
+    <!-- menu superior de selección año-->
+    <div id='menu'>
+      <a href="#2008" id="2008" class="button year selected">2008</a> 
+      <a href="#2009" id="2009" class="button year">2009</a> 
+      <a href="#2010" id="2010" class="button year">2010</a>
+      <a href="#2011" id="2011" class="button year">2011</a>
+      <a href="index_animated.html" class="button">MAPA ANIMADO</a>
+    </div>
+
+
+    <!-- PANEL LATERAL CON INFORMACION DEL MAPA-->
+    <div class="sidepanel">
+      <div class="wrapper">
+        <div class="context subheader">
+          <p>Map created by <a href="http://level423.hol.es/">{S.González}</a></p>
+        </div>
+        <h1>Distribución de la Renta en Barcelona (2008-2011)</h1>
+ 
+        <p>Distribución territorial de la renta en base al índice RFD, cuanto mas alto sea, más oscuro aparece ese barrio.</p>
+
+
+        <h3>Descripción</h3>
+        <p>El <a href="http://w150.bcn.cat/publicacions/sites/default/files/fitxers/documents_gestio/rfd.pdf">indice rfd</a> (Renta Familiar Disponible) es la cantidad de renta de que disponen las familias para dedicar al consumo y el ahorro una vez se han pagado impuestos directos, cuotas a la Seguridad Social, etc. En el caso de la distribución por barrios se tienen en cuenta otras variables, como el porcentaje de coches nuevos en la zona, de titulados universitarios, etc.Para Barcelona se ha tomado como valor medio rfd=100.</p>
+        <p>En este mapa se incluye tambien la distribución de esa renta de una forma lineal, de manera que cada estación de metro de Barcelona esta codificada por colores: azul si el barrio al que pertenece tiene un indice rfd menor que la media, y verde si es superior.</p>
+        <!-- encender o apagar capas-->
+        <h3>Selección de capas</h3>
+        <div id='capas'>
+          <a href="#" id="barrios" class="button capas selected">barrios</a>
+          <a href="#" id="estaciones" class="button capas">estaciones</a>
+          <a href="#" id="lineas" class="button capas">lineas de metro</a>          
+        </div>
+
+        <h3>Fuentes</h3>
+        <p><a href="http://opendata.bcn.cat/opendata/cataleg/SOCIETAT_I_BENESTAR/rendafam-a/">Renta familiar por barrios, años 2008, 2009, 2010 </a>y <a href="http://www.bcn.cat/estadistica/catala/dades/economia/renda/rdfamiliar/a2011/rfbarris.htm">2011. </a><a href="http://opendata.bcn.cat/opendata/cataleg/TRANSPORT/transports/">Posición de las estaciones</a> <a href="http://www.openstreetmap.org/">y lineas de metro</a>, y <a href="http://w24.bcn.cat/geoportal/descargas/DIVADM_SHP.ZIP">límites administrativos de los barrios</a></p>
+      </div>
+    </div>
+      <!--PANEL CON EL GRAFICO-->
+    <div id="chartContainer" class="hide chart">
+      <a href="#" id = "chartHide" class="btn cerrar" style="float:right;color:#000000;padding: 10px;">x</a>
+      <div id="highchart"><div>
+    </div>
+
+
+    
+    <!-- 'infowindow template' personalizada para los barrios-->
+    <script type="infowindow/html" id="infowindow_template0">
+      <div class="cartodb-popup">
+        <a href="#close" class="cartodb-popup-close-button close">x</a>
+          <div class="cartodb-popup-content-wrapper">
+            <div class="cartodb-popup-header">
+              <h2>{{content.data.nbarri}}</h2>
+
+            </div>
+            <div class="cartodb-popup-content">
+            <!-- content.data contains the field info -->
+
+            <table class="table table-condensed table-striped">
+              <thead>
+                <tr><th>Indice RFD</th><tr>
+              </thead>
+              <tbody>
+                <tr><td>2008: </td><td>{{content.data.rfd_2008}}</td></tr>
+                <tr><td>2009: </td><td>{{content.data.rfd_2009}}</td></tr>
+                <tr><td>2010: </td><td>{{content.data.rfd_2010}}</td></tr>
+                <tr><td>2011: </td><td>{{content.data.rfd_2011}}</td></tr>
+              </tbody>
+              <thead>
+                <tr><th>Estudios Superiores</th><tr>
+              </thead>
+              <tbody>
+                <tr><td>2011: </td><td>{{content.data.est_sup_2011}}%</td></tr>
+              </tbody>
+            </table>
+           </div>
+         </div>
+         <div class="cartodb-popup-tip-container"></div>
+      </div>
+    </script>
+    
+    <!-- 'infowindow template' personalizada para las estaciones de metro-->
+    <script type="infowindow/html" id="infowindow_template1">
+      <div class="cartodb-popup">
+        <a href="#close" class="cartodb-popup-close-button close">x</a>
+          <div class="cartodb-popup-content-wrapper">
+            <div  class="cartodb-popup-header">
+              <h2>{{content.data.equipament}}</h2>
+            </div>
+            <div class="cartodb-popup-content">
+            <!-- content.data contains the field info -->
+            <table class="table">
+              <thead>
+                <tr><th>Indice RFD</th><tr>
+              </thead>
+              <tbody>
+                <tr><td>2008: </td><td>{{content.data.rfd_2008}}</td></tr>
+                <tr><td>2009: </td><td>{{content.data.rfd_2009}}</td></tr>
+                <tr><td>2010: </td><td>{{content.data.rfd_2010}}</td></tr>
+                <tr><td>2011: </td><td>{{content.data.rfd_2011}}</td></tr>
+              </tbody>
+            </table>
+           </div>
+         </div>
+         <div class="cartodb-popup-tip-container"></div>
+      </div>
+    </script>
+
+    <script src="js/renta_bcn.js"></script>
+    <script src="js/charts.js"></script>
+
+
+  </div>
+  </body>
+</html>
