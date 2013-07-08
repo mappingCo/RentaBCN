@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Renta Barrios Bcn</title>
+    <meta name="description" content="">
+    <meta name="author" content="S G">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.css" />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.ie.css" />
+    <![endif]-->
+    <style>
+    
+      /* Change the styles below in order to customize your template */
+      
+      body{font-family: Helvetica, Arial; font-weight: regular; font-size: 15px; color: #555; background-color: #FFF; margin: 0;}
+      h1{font-weight: bold; font-size: 31px; letter-spacing: -1px; color: #333; line-height: 33px;}
+      h3{font-weight: bold; font-size: 12px; color: #CCC; text-transform: uppercase; margin: 10px 0 0 0;}
+      p{margin: 8px 0 20px 0; line-height: 18px;}
+      a, a:visited{color: #397DB8; text-decoration: none;}
+      a:hover{text-decoration: underline;}
+      
+      .wrapper{display: block; padding: 4px 30px 0 30px;}
+      
+      .map{background-color:#eee; position: absolute; top: 0; left: 0; bottom: 0; width: 67%; *height:100%;}
+      .sidepanel{background-color:#FFF; position: absolute; top: 0; right: 0; bottom: 0; width: 33%; height: 100%; overflow: auto;}
+      
+      .context{font-family: Helvetica, Arial; font-size: 13px; color: #999; padding: 10px 0 0 0;}
+      .subheader{border-bottom: 1px solid #ddd;}
+      .footer{border-top: 1px solid #ddd; margin-top: 30px;}
+      .titleBlock{text-align: right;}
+      
+      /* Here are the styles that makes the template responsive */
+
+      @media only screen and (max-width: 768px) {
+        .map{position: inherit; height: 400px; width: 100%; display: block;}
+        .sidepanel{position: inherit; width: 100%;}
+      }
+      
+      @media only screen and (max-width: 480px) {.map {height: 300px;}}
+      
+      /*RentaBCN style*/
+      
+      #layer_selector {position: absolute;top: 49%;right: 35%;padding: 0;}
+      #layer_selector ul {padding: 0; margin: 0;list-style-type: none;}
+      #layer_selector li {
+        border-bottom: 1px solid #999999;
+        padding: 15px 30px;
+        font-family: "Helvetica",Arial;
+        font-size: 13px;
+        color: #444;
+        cursor: auto;
+      }
+      #layer_selector li:hover {background-color: #F0F0F0;cursor: pointer;}
+      #layer_selector li.selected {background-color: #EEE;}
+
+      #capas {color: #fff; z-index:10;}
+      #capas a { 
+        margin: 15px 10px 0 0; 
+        padding: 7px;
+        text-align: center;
+        font: bold 12px "Helvetica",Arial;
+        line-height: normal;
+        color: #555;
+        border-radius: 4px;
+        border: 1px solid #777777;
+        background: #ffffff;
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-block
+
+      }
+      #capas a.selected { color: #fff;background: #4E4E4E;}
+      #capas a:hover { color: #fff;background: #9A9A9A;}
+      
+      #menu { position: absolute; top: 5px; left: 60px; height:60px; background: transparent; z-index:10;}
+      #menu a { 
+        margin: 15px 10px 0 0;
+        float: left;
+        vertical-align: baseline;
+        min-width: 40px;
+        padding: 10px;
+        text-align: center;
+        font: bold 12px "Helvetica",Arial;
+        line-height: normal;
+        color: #555;
+        border-radius: 4px;
+        border: 1px solid #777777;
+        background: #ffffff;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      #menu a.selected{color: #fff;background: #4E4E4E;}
+      #menu a:hover { color: #fff;background: #9A9A9A;
+      }
+      .hide { display:none; }
+      .chart{background-color:#fff; position: absolute; top: 0; right: 0; bottom: 0; width: 33%; height: 100%;}
+
+      @media only screen and (max-width: 768px) {
+        .chart{top: 400px; width: 100%;}
+        .sidepanel{position: inherit; width: 100%;}
+        #layer_selector {position:absolute;top:200px; right: 15px;height: 200px;}
+        #layer_selector li {padding: 5px 5px };
+      }
+      
+      @media only screen and (max-width: 480px) {
+        .chart{top: 310px; width: 100%;height: 150px;}
+        #menu {height:30px;}
+        #menu a {
+          margin: 2px 2px 0 0;
+          padding: 6px;
+          min-width: 20px;
+          min-height: 10px;
+          font: bold 11px "Helvetica",Arial;
+        }
+        #layer_selector {visibility: hidden};
+      }
+      div.cartodb-popup .jspContainer:after, div.cartodb-popup .jspContainer:before {
+        height: 0px;
+        z-index: 11;
+      }
+      div.cartodb-popup .jspDrag{visibility: hidden;}
+      
+    </style>
+    
+    <script src="http://libs.cartocdn.com/cartodb.js/v2/cartodb.js"></script>
+
+  
+  </head>
+  <body onload="init()">
+  <div class="contenedor">
+    <div class="map" id="map"></div>
+
+    <!-- menu query a capa barrios-->
+    <div id="layer_selector" class="cartodb_infobox">
+      <ul>
+        <li data="all" class="rfd all selected">all</li>
+        <li data="50" class="rfd"> index rfd < 50</li>
+        <li data="75" class="rfd">index rfd < 75</li>
+        <li data="99" class="rfd">index rfd < 100</li>
+        <li data="100" class="rfd">index rfd > 100</li>
+        <li data="150" class="rfd">index rfd > 150</li>
+        <li data="200" class="rfd">index rfd > 200</li>
+      </ul>
+    </div>
+
+    <!-- menu superior de selección año-->
+    <div id='menu'>
+      <a href="#2008" id="2008" class="button year selected">2008</a> 
+      <a href="#2009" id="2009" class="button year">2009</a> 
+      <a href="#2010" id="2010" class="button year">2010</a>
+      <a href="#2011" id="2011" class="button year">2011</a>
+      <a href="index_animated.html" class="button">MAPA ANIMADO</a>
+    </div>
+
+
+    <!-- PANEL LATERAL CON INFORMACION DEL MAPA-->
+    <div class="sidepanel">
+      <div class="wrapper">
+        <div class="context subheader">
+          <p>Map created by <a href="http://level423.hol.es/">{S.González}</a></p>
+        </div>
+        <h1>Distribución de la Renta en Barcelona (2008-2011)</h1>
+ 
+        <p>Distribución territorial de la renta en base al índice RFD, cuanto mas alto sea, más oscuro aparece ese barrio.</p>
+
+
+        <h3>Descripción</h3>
+        <p>El <a href="http://w150.bcn.cat/publicacions/sites/default/files/fitxers/documents_gestio/rfd.pdf">indice rfd</a> (Renta Familiar Disponible) es la cantidad de renta de que disponen las familias para dedicar al consumo y el ahorro una vez se han pagado impuestos directos, cuotas a la Seguridad Social, etc. En el caso de la distribución por barrios se tienen en cuenta otras variables, como el porcentaje de coches nuevos en la zona, de titulados universitarios, etc.Para Barcelona se ha tomado como valor medio rfd=100.</p>
+        <p>En este mapa se incluye tambien la distribución de esa renta de una forma lineal, de manera que cada estación de metro de Barcelona esta codificada por colores: azul si el barrio al que pertenece tiene un indice rfd menor que la media, y verde si es superior.</p>
+        <!-- encender o apagar capas-->
+        <h3>Selección de capas</h3>
+        <div id='capas'>
+          <a href="#" id="barrios" class="button capas selected">barrios</a>
+          <a href="#" id="estaciones" class="button capas">estaciones</a>
+          <a href="#" id="lineas" class="button capas">lineas de metro</a>          
+        </div>
+
+        <h3>Fuentes</h3>
+        <p><a href="http://opendata.bcn.cat/opendata/cataleg/SOCIETAT_I_BENESTAR/rendafam-a/">Renta familiar por barrios, años 2008, 2009, 2010 </a>y <a href="http://www.bcn.cat/estadistica/catala/dades/economia/renda/rdfamiliar/a2011/rfbarris.htm">2011. </a><a href="http://opendata.bcn.cat/opendata/cataleg/TRANSPORT/transports/">Posición de las estaciones</a> <a href="http://www.openstreetmap.org/">y lineas de metro</a>, y <a href="http://w24.bcn.cat/geoportal/descargas/DIVADM_SHP.ZIP">límites administrativos de los barrios</a></p>
+      </div>
+    </div>
+      <!--PANEL CON EL GRAFICO-->
+    <div id="chartContainer" class="hide chart">
+      <a href="#" id = "chartHide" class="btn cerrar" style="float:right;color:#000000;padding: 10px;">x</a>
+      <div id="highchart"><div>
+    </div>
+
+
+    
+    <!-- 'infowindow template' personalizada para los barrios-->
+    <script type="infowindow/html" id="infowindow_template0">
+      <div class="cartodb-popup">
+        <a href="#close" class="cartodb-popup-close-button close">x</a>
+          <div class="cartodb-popup-content-wrapper">
+            <div class="cartodb-popup-header">
+              <h2>{{content.data.nbarri}}</h2>
+
+            </div>
+            <div class="cartodb-popup-content">
+            <!-- content.data contains the field info -->
+
+            <table class="table table-condensed table-striped">
+              <thead>
+                <tr><th>Indice RFD</th><tr>
+              </thead>
+              <tbody>
+                <tr><td>2008: </td><td>{{content.data.rfd_2008}}</td></tr>
+                <tr><td>2009: </td><td>{{content.data.rfd_2009}}</td></tr>
+                <tr><td>2010: </td><td>{{content.data.rfd_2010}}</td></tr>
+                <tr><td>2011: </td><td>{{content.data.rfd_2011}}</td></tr>
+              </tbody>
+              <thead>
+                <tr><th>Estudios Superiores</th><tr>
+              </thead>
+              <tbody>
+                <tr><td>2011: </td><td>{{content.data.est_sup_2011}}%</td></tr>
+              </tbody>
+            </table>
+           </div>
+         </div>
+         <div class="cartodb-popup-tip-container"></div>
+      </div>
+    </script>
+    
+    <!-- 'infowindow template' personalizada para las estaciones de metro-->
+    <script type="infowindow/html" id="infowindow_template1">
+      <div class="cartodb-popup">
+        <a href="#close" class="cartodb-popup-close-button close">x</a>
+          <div class="cartodb-popup-content-wrapper">
+            <div  class="cartodb-popup-header">
+              <h2>{{content.data.equipament}}</h2>
+            </div>
+            <div class="cartodb-popup-content">
+            <!-- content.data contains the field info -->
+            <table class="table">
+              <thead>
+                <tr><th>Indice RFD</th><tr>
+              </thead>
+              <tbody>
+                <tr><td>2008: </td><td>{{content.data.rfd_2008}}</td></tr>
+                <tr><td>2009: </td><td>{{content.data.rfd_2009}}</td></tr>
+                <tr><td>2010: </td><td>{{content.data.rfd_2010}}</td></tr>
+                <tr><td>2011: </td><td>{{content.data.rfd_2011}}</td></tr>
+              </tbody>
+            </table>
+           </div>
+         </div>
+         <div class="cartodb-popup-tip-container"></div>
+      </div>
+    </script>
+
+    <script>
+      
+      var map;//define el mapa
+      var selected_year = $('.year.selected').attr('id'); //define que año esta seleccionado 
+
+      // crea el selector de querys
+      function createSelector(layer) {
+        var sql = new cartodb.SQL({ user: 'mac' });
+
+        var $options = $('#layer_selector li');
+
+        //al cambiar de año, all vuelve a estar selected
+        $('.rfd').removeClass('selected');
+        $('.all').addClass('selected'); 
+
+        //seleccion por query al index_rfd
+        $options.click(function(e) {
+
+          // get the area of the selected layer
+          var $li = $(e.target);
+          var indice = $li.attr('data');
+
+          // deselect all and select the clicked one
+          $options.removeClass('selected');
+          $li.addClass('selected');
+
+          // create query based on data from the layer
+          var query =  "SELECT * FROM {{table_name}}";
+          if(indice !== 'all') {
+            
+            query = "SELECT * FROM {{table_name}} where rfd_"+ selected_year +" <" +indice ;
+            
+            if(indice == '100' || indice == '150' || indice == '200') {
+              query = "SELECT * FROM {{table_name}} where rfd_"+ selected_year +" >" +indice ;
+            }
+          }
+          
+
+          // cambia la query de la capa al actualizar el mapa
+          layer.setQuery(query);
+        });//options
+      }//create selector
+
+        
+        
+      function init(){
+        // inicializa el mapa leaflet
+        map = new L.Map('map', { 
+          center: [41.40,2.18],
+          zoom: 12,
+          minZoom: 10,
+          maxZoom: 16
+        })
+        
+        //define la capabase y la añade al mapa
+        L.tileLayer('http://tile.stamen.com/toner-background/{z}/{x}/{y}.png', {
+          attribution: 'Stamen'
+        }).addTo(map);
+
+        //define un array de layers
+        var layers=[];
+
+        //crea capa con la tabla 'renta barrios08_11': layers[0]
+        //
+        //define el enlace para crerar la visualizacion con el nombre de usuario y la tabla
+        var layer0Url = 'http://mac.cartodb.com/api/v1/viz/renta_barris_08_11_e/viz.json';
+
+        //define la query y el estilo CartoCSS iniciales para la capa[0] (renta_barris)
+        var layer0Options = {
+          query: "SELECT * FROM {{table_name}}",
+          tile_style: "#{{table_name}}{[ rfd_" + selected_year + " <= 250]{polygon-fill: #B10026;}[ rfd_" + selected_year + " <= 180]{polygon-fill: #E31A1C;}[ rfd_" + selected_year + " <= 140]{polygon-fill: #FC4E2A;}[ rfd_" + selected_year + " <= 110]{polygon-fill: #FD8D3C;}[ rfd_" + selected_year + " <= 80]{polygon-fill: #FEB24C;}[ rfd_" + selected_year + " <= 70]{polygon-fill: #FED976;}[ rfd_" + selected_year + " <= 60]{polygon-fill: #FFFFB2;}[ rfd_" + selected_year + " <= 45]{polygon-fill: #FFFFCC;}line-color: #FFF;line-opacity: 1;line-width: 1;polygon-opacity: 0.8;}"
+        };
+        //carga la capa CartoDB
+        cartodb.createLayer(map, layer0Url, layer0Options)
+          .on('done', function(layer) {
+            layer.infowindow.set('template', $('#infowindow_template0').html());
+            map.addLayer(layer);
+            layers.push(layer);//mete la layer[0] al array de capas
+            createSelector(layer);
+            //añade un evento de click que llama a la funcion que dibuja el 
+            //gráfico pasandole como parámetro el cartodb_id
+            layer.on('featureClick', function(e, pos, latlng, data) {
+              $('#chartContainer').removeClass('hide');
+              charts(data.cartodb_id);
+            });
+          }).on('error', function() {
+            //log the error
+          });
+   
+        //Actualiza el mapa de los barrios cambiando las "layers options" al año seleccionado
+        function updateQuery0() {
+          layers[0].setOptions ({
+            query: "SELECT * FROM {{table_name}}",
+            tile_style: "#{{table_name}}{[ rfd_" + selected_year + " <= 250]{polygon-fill: #B10026;}[ rfd_" + selected_year + " <= 180]{polygon-fill: #E31A1C;}[ rfd_" + selected_year + " <= 140]{polygon-fill: #FC4E2A;}[ rfd_" + selected_year + " <= 110]{polygon-fill: #FD8D3C;}[ rfd_" + selected_year + " <= 80]{polygon-fill: #FEB24C;}[ rfd_" + selected_year + " <= 70]{polygon-fill: #FED976;}[ rfd_" + selected_year + " <= 60]{polygon-fill: #FFFFB2;}[ rfd_" + selected_year + " <= 45]{polygon-fill: #FFFFCC;}line-color: #FFF;line-opacity: 1;line-width: 1;polygon-opacity: 0.9;}"
+          });
+          createSelector(layers[0]);
+        }
+        //crea una capa con las lineas de metro. layers[1]
+        var layer1Url ="http://mac.cartodb.com/api/v1/viz/lineas_metro/viz.json";
+        var layer1Options = {
+          query:"SELECT * FROM {{table_name}}",
+          tile_style: "#{{table_name}}{[linea = 1] {line-color: #FF0000;}[ linea = 2]{line-color: #FF00FF;}[ linea = 3] {line-color: #80FF00;}[ linea = 4]{line-color: #FFFF00;}[ linea = 5]{line-color: #8080FF;}[ linea = 6] {line-color: #8080C0;}[ linea = 7] {line-color: #ED811F;}[ linea = 8] {line-color: #FF80FF;}[ linea = 9] {line-color: #FFBB77;}[ linea = 10] {line-color: #FF6215;}[ linea = 11] {line-color: #2E9E52;}line-opacity: 0.8;line-width: 3;}"
+    
+        }
+        cartodb.createLayer(map, layer1Url,layer1Options)
+          .on('done', function(layer) {
+            map.addLayer(layer);
+            layers.push(layer);//mete la layer[1] al array de capas
+            layers[1].hide();
+          }).on('error', function() {
+            //log the error
+          });
+      
+        //crea una capa con la tabla de las estaciones, 'metro_rfd': layers[2]
+        var layer2Url = 'http://mac.cartodb.com/api/v1/viz/metro_rfd/viz.json';
+        var layer2Options = {
+          query: "SELECT * FROM {{table_name}}",
+          tile_style: "#{{table_name}}{[ rfd_"+selected_year+" <= 100]{first/marker-fill: #9595FF;second/marker-fill: #5353FF;third/marker-fill: #0000FF}[ rfd_"+ selected_year+" > 100]{first/marker-fill: #008000;second/marker-fill: #0FFF0F;third/marker-fill: #00E100;}first/marker-opacity: 0.05;first/marker-width: 50;first/marker-line-width: 0;first/marker-placement: point;first/marker-allow-overlap: true;first/marker-comp-op: lighten;second/marker-opacity: 0.08;second/marker-width:30;second/marker-line-width: 0;second/marker-placement: point;second/marker-allow-overlap: true;second/marker-comp-op: lighten;third/marker-opacity: 0.5;third/marker-width:8;third/marker-line-width: 0;third/marker-placement: point;third/marker-allow-overlap: true;third/marker-comp-op: lighten;}"
+        }
+        cartodb.createLayer(map, layer2Url,layer2Options)
+          .on('done', function(layer) {
+            layer.infowindow.set('template', $('#infowindow_template1').html());
+            map.addLayer(layer);
+
+            layers.push(layer);//mete la layer[2] al array de capas
+      layers[2].hide();
+          }).on('error', function() {
+            //log the error
+          });
+        
+        //Actualiza el mapa cambiando las "layers options" al año seleccionado
+        function updateQuery2() {
+          layers[2].setOptions ({
+            query: "SELECT * FROM {{table_name}}",
+            tile_style: "#{{table_name}}{[ rfd_"+selected_year+" <= 100]{first/marker-fill: #9595FF;second/marker-fill: #5353FF;third/marker-fill: #0000FF}[ rfd_"+ selected_year+" > 100]{first/marker-fill: #008000;second/marker-fill: #0FFF0F;third/marker-fill: #00E100;}first/marker-opacity: 0.05;first/marker-width: 50;first/marker-line-width: 0;first/marker-placement: point;first/marker-allow-overlap: true;first/marker-comp-op: lighten;second/marker-opacity: 0.08;second/marker-width:30;second/marker-line-width: 0;second/marker-placement: point;second/marker-allow-overlap: true;second/marker-comp-op: lighten;third/marker-opacity: 0.5;third/marker-width:8;third/marker-line-width: 0;third/marker-placement: point;third/marker-allow-overlap: true;third/marker-comp-op: lighten;}"
+            //tile_style: "#{{table_name}}{[ rfd_"+selected_year+" <= 100]{first/marker-fill: #F20000;second/marker-fill: #FF5959;third/marker-fill: #FF9B9B}[ rfd_"+ selected_year+" > 100]{first/marker-fill: #008000;second/marker-fill: #0FFF0F;third/marker-fill: #9DFF9D;}first/marker-opacity: 0.01;first/marker-width: 80;first/marker-line-width: 0;first/marker-placement: point;first/marker-allow-overlap: true;first/marker-comp-op: lighten;second/marker-opacity: 0.02;second/marker-width:50;second/marker-line-width: 0;second/marker-placement: point;second/marker-allow-overlap: true;second/marker-comp-op: lighten;third/marker-opacity: 0.04;third/marker-width:20;third/marker-line-width: 0;third/marker-placement: point;third/marker-allow-overlap: true;third/marker-comp-op: lighten;}"
+          });
+          //createSelector(layers[0]);
+        }
+
+
+        //seleccion del año del que se muestran datos de rfd
+        $('.year').click(function(){
+          $('.year').removeClass('selected');
+          $(this).addClass('selected'); 
+          selected_year = $(this).attr('id');
+          updateQuery0();
+          updateQuery2();
+        });
+
+        //encender y apagar capas (barrios, estaciones y lineas de metro)
+        $('.capas').click(function(){
+          if ($(this).hasClass('selected')){
+            $(this).removeClass('selected');
+            if ($(this).attr('id')=='barrios'){
+              layers[0].hide();
+            }
+            if ($(this).attr('id')=='estaciones'){
+              layers[2].hide();
+            }
+            if ($(this).attr('id')=='lineas'){
+              layers[1].hide();
+            }
+          }
+          else {
+            $(this).addClass('selected');
+            if ($(this).attr('id')=='barrios'){
+                layers[0].show();
+              }
+              if ($(this).attr('id')=='estaciones'){
+                layers[2].show();
+              }
+              if ($(this).attr('id')=='lineas'){
+                layers[1].show();
+              }
+          }
+
+        });
+        //ocultar el gráfico
+        $("#chartHide").click(function(){
+          $('#chartContainer').addClass('hide');
+        });
+
+      }//init
+    </script>
+    <scrip>
+      //crea un grafico con los datos del registro seleccionado mediante la libreria highchart.js
+
+//la funcion charts recibe por parámetro el cartodb_id del barrio seleccionado en el mapa
+//y hace una peticion getJson a la tabla
+function charts(data_id) {
+  var campo = data_id;
+  var url ="http://mac.cartodb.com/api/v1/sql?q=SELECT nbarri,rfd_2008,rfd_2009,rfd_2010, rfd_2011 FROM renta_barris_08_11_e WHERE cartodb_id="+campo+""
+  console.log(url);
+  var cartoItems = [];
+  $.getJSON(url, function(data) {
+        $.each(data.rows, function(key, val) {
+            cartoItems.push(val.rfd_2008);
+            cartoItems.push(val.rfd_2009);
+            cartoItems.push(val.rfd_2010);
+            cartoItems.push(val.rfd_2011);
+            barrio= val.nbarri;
+        });
+        console.log(cartoItems);
+        console.log(barrio);
+    creaChart(cartoItems,barrio);
+    });
+};
+
+function creaChart(cartoData,barrio){
+        $('#highchart').highcharts({
+            chart: {
+                type: 'line',
+                marginRight: 50,
+                marginBottom: 50,
+                marginTop:100
+            },
+            title: {
+                text: 'Distribución Renta BCN | Indice RFD',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'Fuente Dtos: <a href="http://opendata.bcn.cat/opendata/cataleg/SOCIETAT_I_BENESTAR/rendafam-a/">Opendata.bcn.cat</a><br/>BCN=100',
+                x: -20
+            },
+            //años
+            xAxis: {
+                categories: ['2008', '2009', '2010', '1011']
+            },
+            //rfd
+            yAxis: {
+                title: {
+                    text: 'Indice RDF'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                valueSuffix: '',
+                valuePrefix: 'RFD: '
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -20,
+                y: 60,
+                borderWidth: 0
+            },
+            series: [{
+                name: barrio,
+                data: cartoData
+            }]
+        });
+    };
+
+    </script>
+
+
+  </div>
+  </body>
+</html>
